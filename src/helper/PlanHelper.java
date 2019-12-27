@@ -73,7 +73,7 @@ public class PlanHelper {
         BufferedImage rotated = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = rotated.createGraphics();
         AffineTransform at = new AffineTransform();
-        at.translate((newWidth - w) / 2, (newHeight - h) / 2);
+        at.translate((newWidth - w) / 2., (newHeight - h) / 2.);
 
         int x = w / 2;
         int y = h / 2;
@@ -81,8 +81,6 @@ public class PlanHelper {
         at.rotate(rads, x, y);
         g2d.setTransform(at);
         g2d.drawImage(img, 0, 0, null);
-        //g2d.setColor(Color.RED);
-       // g2d.drawRect(0, 0, newWidth - 1, newHeight - 1);
         g2d.dispose();
 
         return rotated;

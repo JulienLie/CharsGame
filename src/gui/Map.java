@@ -5,6 +5,8 @@ import player.Obstacle;
 import player.SimpleObstacle;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Area;
@@ -66,6 +68,10 @@ public enum Map {
         }
     }
 
+    public int nbrPlayers(){
+        return spawns.size();
+    }
+
     public List<Obstacle> getObstacles() {
         return obstacles;
     }
@@ -113,6 +119,12 @@ public enum Map {
                 c.gridy = i+1;
                 this.add(maps[i], c);
             }
+            spinner.addChangeListener(e -> {
+                for(int i = 0; i < Map.values().length; i++){
+                    if(Map.values()[i].nbrPlayers() < (int) spinner.getValue()) maps[i].setEnabled(false);
+                    else maps[i].setEnabled(true);
+                }
+            });
             c.gridx = 2;
             c.gridy = GridBagConstraints.RELATIVE;
             c.anchor = GridBagConstraints.LAST_LINE_END;
