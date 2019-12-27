@@ -4,18 +4,33 @@ import gui.Map;
 import gui.OptionsMenu;
 import helper.PlanHelper;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.geom.Area;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class Chars implements KeyListener, Obstacle {
 
-
     private static final long reloadTime = 1500;
     private static final int width = 30, height = 20;
     private static int nbr = 0;
+    private static final BufferedImage charImg;
+
+    static {
+        BufferedImage charImgTemp;
+        try {
+            charImgTemp = ImageIO.read(new File("assets/Chars.png"));
+        } catch (IOException e) {
+            charImgTemp = null;
+            e.printStackTrace();
+        }
+        charImg = charImgTemp;
+    }
 
     public final int up, down, right, left, shoot;
     private double x,y;
@@ -25,6 +40,7 @@ public class Chars implements KeyListener, Obstacle {
     private Color color;
     private boolean isDead;
     private final int serial;
+    private BufferedImage image;
 
     public Chars(OptionsMenu.PlayerMove moove){
         this(moove.up, moove.down, moove.right, moove.left, moove.shoot);
@@ -45,6 +61,7 @@ public class Chars implements KeyListener, Obstacle {
         color = Color.gray;
         isDead = true;
         this.serial = ++nbr;
+        if(charImg != null) image = PlanHelper.changeColor(charImg, color);
     }
 
     public void spawn(Map.Spawn spawn){
@@ -52,24 +69,18 @@ public class Chars implements KeyListener, Obstacle {
         this.y = spawn.pos.y;
         this.rota = spawn.dir;
         this.color = spawn.color;
+        image = PlanHelper.changeColor(charImg, color);
         isDead = false;
     }
 
     @Override
     public Polygon getHitBox(){
-        Polygon base = PlanHelper.rotatedRectangle(x, y, height, width, rota);
-        double[] first = PlanHelper.rotate(x, y, x, y+2, rota*Math.PI/180.);
-        double[] sec = PlanHelper.rotate(x, y, x+height+1, y+2, rota*Math.PI/180.);
-        double[] third = PlanHelper.rotate(x, y, x+height+1, y-2, rota*Math.PI/180.);
-        double[] fourth = PlanHelper.rotate(x, y, x, y-2, rota*Math.PI/180.);
-        Polygon canon = new Polygon(new int[]{(int) first[0], (int) sec[0], (int) third[0], (int) fourth[0]},
-                new int[]{(int) first[1], (int) sec[1], (int) third[1], (int) fourth[1]}, 4);
-        return PlanHelper.mergePolygons(base, canon);
+        return PlanHelper.rotatedRectangle(x, y, height, width, rota);
     }
 
     public Obstacle doAction(List<Obstacle> obstacles){
         if(isDead) return null;
-        double rad = rota*Math.PI/180.;
+        double rad = Math.toRadians(rota);
         double lastX = x;
         double lastY = y;
         double lastRota = rota;
@@ -81,10 +92,10 @@ public class Chars implements KeyListener, Obstacle {
             x-= Math.cos(rad);
             y-= Math.sin(rad);
         }
-        else if(input == left){
+        else if(input == right){
             rota = (rota+1)%360;
         }
-        else if(input == right){
+        else if(input == left){
             rota = (rota-1) < 0 ? 359 : rota-1;
         }
         else if(input == shoot){
@@ -111,13 +122,20 @@ public class Chars implements KeyListener, Obstacle {
     }
 
     public void paint(Graphics g){
-        g.setColor(color);
-        g.fillPolygon(this.getHitBox());
+        if(charImg == null) {
+            g.setColor(color);
+            g.fillPolygon(this.getHitBox());
+        }
+        else{
+            BufferedImage image = PlanHelper.rotateImageByDegrees(this.image, rota);
+            g.drawImage(image, (int) (x-(image.getWidth()/2)), (int) (y-(image.getHeight()/2)), null);
+        }
     }
 
     void hit(){
         this.isDead = true;
         this.color = Color.gray;
+        this.image = PlanHelper.changeColor(charImg, color);
     }
 
     public boolean isDead(){

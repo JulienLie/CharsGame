@@ -3,8 +3,10 @@ package helper;
 import player.Chars;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.geom.PathIterator;
+import java.awt.image.BufferedImage;
 
 public class PlanHelper {
 
@@ -57,5 +59,47 @@ public class PlanHelper {
             iterator.next();
         }
         return polygon;
+    }
+
+    public static BufferedImage rotateImageByDegrees(BufferedImage img, double angle) {
+
+        double rads = Math.toRadians(angle);
+        double sin = Math.abs(Math.sin(rads)), cos = Math.abs(Math.cos(rads));
+        int w = img.getWidth();
+        int h = img.getHeight();
+        int newWidth = (int) Math.floor(w * cos + h * sin);
+        int newHeight = (int) Math.floor(h * cos + w * sin);
+
+        BufferedImage rotated = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = rotated.createGraphics();
+        AffineTransform at = new AffineTransform();
+        at.translate((newWidth - w) / 2, (newHeight - h) / 2);
+
+        int x = w / 2;
+        int y = h / 2;
+
+        at.rotate(rads, x, y);
+        g2d.setTransform(at);
+        g2d.drawImage(img, 0, 0, null);
+        //g2d.setColor(Color.RED);
+       // g2d.drawRect(0, 0, newWidth - 1, newHeight - 1);
+        g2d.dispose();
+
+        return rotated;
+    }
+
+    public static BufferedImage changeColor(BufferedImage image, Color color){
+        BufferedImage reColor = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
+        for(int i = 0; i < image.getWidth(); i++){
+            for(int j = 0; j < image.getHeight(); j++){
+                if((image.getRGB(i, j)) == 0xff00ff00){
+                    reColor.setRGB(i, j, color.getRGB());
+                }
+                else{
+                    reColor.setRGB(i, j, image.getRGB(i, j));
+                }
+            }
+        }
+        return reColor;
     }
 }
