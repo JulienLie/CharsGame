@@ -30,7 +30,9 @@ public class Bullet implements Obstacle{
         for(Obstacle o : obstacles){
             Area other = new Area(o.getHitBox());
             other.intersect(area);
-            if(!other.isEmpty()) return true;
+            if(!other.isEmpty()){
+                return true;
+            }
         }
         for(Chars c : chars){
             Area other = new Area(c.getHitBox());

@@ -2,9 +2,10 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.*;
-import java.security.Key;
 
 public class OptionsMenu extends JPanel {
 
@@ -13,9 +14,10 @@ public class OptionsMenu extends JPanel {
     public static File getOptFile(){
         File f = new File("otpions.ini");
         if(!f.exists()){
+            System.out.println("creating save file");
             try {
                 if(f.createNewFile()){
-                    save();
+                    save(f);
                 }
                 else{
                     System.err.println("Couldn't create options file");
@@ -29,54 +31,42 @@ public class OptionsMenu extends JPanel {
         }
         try {
             load(f);
-        } catch (IOException e) {
+        } catch (IOException | IllegalAccessException | ClassNotFoundException e) {
+            System.err.println("Couldn't load options file");
             e.printStackTrace();
         }
         return f;
     }
 
-    private static void load(File f) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(f));
-        String line;
-        while((line = reader.readLine()) != null){
-            String[] s = line.split("\\(.*\\)| = ");
-            for(PlayerMove pm : PlayerMove.values()){
-                if(pm.name().equals(s[0])){
-                    switch (s[1]){
-                        case "Up":
-                            pm.up = Integer.parseInt(s[2]);
-                            break;
-                        case "Down":
-                            pm.down = Integer.parseInt(s[2]);
-                            break;
-                        case "Left":
-                            pm.left = Integer.parseInt(s[2]);
-                            break;
-                        case "Right":
-                            pm.right = Integer.parseInt(s[2]);
-                            break;
-                        case "Shoot":
-                            pm.shoot = Integer.parseInt(s[2]);
-                            break;
-                        default:
-                            System.err.println("QUOI?");
-                            break;
-                    }
-                }
-            }
+    private static void load(File f) throws IOException, ClassNotFoundException, IllegalAccessException {
+        FileInputStream fileIn = new FileInputStream(f);
+        ObjectInputStream objectIn = new ObjectInputStream(fileIn);
+        for(PlayerMove pm : PlayerMove.values()){
+            PlayerMove move = (PlayerMove) objectIn.readObject();
+            System.out.println("Loading " + move);
+            pm.up = move.up;
+            pm.down = move.down;
+            pm.left = move.left;
+            pm.right = move.right;
+            pm.shoot = move.shoot;
         }
+        objectIn.close();
+        fileIn.close();
     }
 
-    public static void save() throws FileNotFoundException {
-        PrintWriter writer = new PrintWriter(OPTIONSFILE);
-        for(PlayerMove pm : PlayerMove.values()){
-            writer.write(String.format("%sUp = %d\n", pm.toString(), pm.up));
-            writer.write(String.format("%sDown = %d\n", pm.toString(), pm.down));
-            writer.write(String.format("%sLeft = %d\n", pm.toString(), pm.left));
-            writer.write(String.format("%sRight = %d\n", pm.toString(), pm.right));
-            writer.write(String.format("%sShoot = %d\n", pm.toString(), pm.shoot));
+    public static void save(File f) {
+        try {
+            FileOutputStream fileOut = new FileOutputStream(f);
+            ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
+            for(PlayerMove pm : PlayerMove.values()){
+                objectOut.writeObject(pm);
+                System.out.println("Saving " + pm);
+            }
+            objectOut.close();
+            fileOut.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        writer.flush();
     }
 
     public enum PlayerMove{
@@ -102,19 +92,16 @@ public class OptionsMenu extends JPanel {
     }
 
     private Game parent;
-    private JButton save;
-    private JButton cancel;
-    private JTabbedPane pane;
 
     public OptionsMenu(Game parent){
         super();
         this.parent = parent;
-        this.save = new JButton("Save Changes");
-        this.cancel = new JButton("Cancel Changes");
-        this.save.addActionListener(this::saveButton);
-        this.cancel.addActionListener(this::cancelButton);
+        JButton save = new JButton("Save Changes");
+        JButton cancel = new JButton("Cancel Changes");
+        save.addActionListener(this::saveButton);
+        cancel.addActionListener(this::cancelButton);
 
-        pane = new JTabbedPane();
+        JTabbedPane pane = new JTabbedPane();
         for(PlayerMove pm : PlayerMove.values()){
             pane.addTab(pm.name(), new KeyPanel(pm));
         }
@@ -148,16 +135,11 @@ public class OptionsMenu extends JPanel {
     }
 
     private void saveButton(ActionEvent event) {
-        try {
-            save();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            System.err.println("Could not save option file");
-        }
+        save(OPTIONSFILE);
         parent.changeMenu(new Menu(parent));
     }
 
-    private class KeyPanel extends JPanel{
+    private static class KeyPanel extends JPanel{
 
         PlayerMove pm;
         JButton[] fields;
@@ -215,13 +197,13 @@ public class OptionsMenu extends JPanel {
                                 KeyPanel.this.pm.down = keyEvent.getKeyCode();
                                 break;
                             case "left":
-                                KeyPanel.this.pm.down = keyEvent.getKeyCode();
+                                KeyPanel.this.pm.left = keyEvent.getKeyCode();
                                 break;
                             case "right":
-                                KeyPanel.this.pm.down = keyEvent.getKeyCode();
+                                KeyPanel.this.pm.right = keyEvent.getKeyCode();
                                 break;
                             case "shoot":
-                                KeyPanel.this.pm.down = keyEvent.getKeyCode();
+                                KeyPanel.this.pm.shoot = keyEvent.getKeyCode();
                                 break;
                             default:
                                 System.out.println("QUOI?");

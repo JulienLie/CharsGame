@@ -16,7 +16,7 @@ public class Game extends JFrame implements Runnable{
 
     public Game(){
         super("Chars");
-        this.setSize(600, 600);
+        this.setSize(700, 700);
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
         this.panel = new Menu(this);
@@ -30,10 +30,10 @@ public class Game extends JFrame implements Runnable{
     public void addChar(Chars c){
         if(panel instanceof  GamePanel) {
             if (((GamePanel) panel).addChar(c)) {
-                System.out.println("new char");
                 this.addKeyListener(c);
             }
         }
+        else throw new IllegalStateException();
     }
 
     private void restart(){
@@ -43,7 +43,7 @@ public class Game extends JFrame implements Runnable{
             this.remove(panel);
             this.panel = new GamePanel(panel.getMap());
             this.add(panel);
-            for (Chars c : chars) panel.addChar(c);
+            for (Chars c : chars) this.addChar(c);
             Thread t = new Thread(this);
             t.start();
         }
@@ -52,7 +52,6 @@ public class Game extends JFrame implements Runnable{
     @Override
     public void run(){
         if(gameRunning) return;
-        System.out.println("run");
         gameRunning = true;
         gameLoop();
     }

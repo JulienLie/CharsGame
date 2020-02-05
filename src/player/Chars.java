@@ -3,6 +3,7 @@ package player;
 import gui.Map;
 import gui.OptionsMenu;
 import helper.PlanHelper;
+import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -34,15 +35,16 @@ public class Chars implements KeyListener, Obstacle {
 
     public final int up, down, right, left, shoot;
     private double x,y;
-    private double rota;
+    private double rota; // En degré
     private long lastShoot;
     private int input;
     private Color color;
     private boolean isDead;
     private final int serial;
     private BufferedImage image;
+    protected List<Obstacle> obstacles;
 
-    public Chars(OptionsMenu.PlayerMove moove){
+    public Chars(@NotNull OptionsMenu.PlayerMove moove){
         this(moove.up, moove.down, moove.right, moove.left, moove.shoot);
         System.out.println("new char(" + moove.toString() + ")");
     }
@@ -64,7 +66,7 @@ public class Chars implements KeyListener, Obstacle {
         if(charImg != null) image = PlanHelper.changeColor(charImg, color);
     }
 
-    public void spawn(Map.Spawn spawn){
+    public final void spawn(Map.Spawn spawn){
         this.x = spawn.pos.x;
         this.y = spawn.pos.y;
         this.rota = spawn.dir;
@@ -74,54 +76,92 @@ public class Chars implements KeyListener, Obstacle {
     }
 
     @Override
-    public Polygon getHitBox(){
+    public final Polygon getHitBox(){
         return PlanHelper.rotatedRectangle(x, y, height, width, rota);
     }
 
     public Obstacle doAction(List<Obstacle> obstacles){
         if(isDead) return null;
-        double rad = Math.toRadians(rota);
-        double lastX = x;
-        double lastY = y;
-        double lastRota = rota;
+        this.obstacles = obstacles;
         if(input == up){
-            x+= Math.cos(rad);
-            y+= Math.sin(rad);
+            forward();
         }
         else if(input == down){
-            x-= Math.cos(rad);
-            y-= Math.sin(rad);
+            backward();
         }
         else if(input == right){
-            rota = (rota+1)%360;
+            turnRight();
         }
         else if(input == left){
-            rota = (rota-1) < 0 ? 359 : rota-1;
+            turnLeft();
         }
         else if(input == shoot){
-            long now = System.currentTimeMillis();
-            if(lastShoot+reloadTime <= now){
-                this.lastShoot = now;
-                double[] pos = PlanHelper.rotate(x, y, x+width/2., y, rad);
-                return new Bullet((int) Math.round(pos[0]), (int) Math.round(pos[1]), rota, color);
-            }
+            return shoot();
         }
+        return null;
+    }
+
+    protected final void forward(){
+        double rad = Math.toRadians(rota);
+        move(x+Math.cos(rad), y+Math.sin(rad), rota);
+    }
+
+    protected final void backward(){
+        double rad = Math.toRadians(rota);
+        move(x-Math.cos(rad), y-Math.sin(rad), rota);
+    }
+
+    protected final void turnLeft(){
+        move(x, y, (rota-1) < 0 ? 359 : rota-1);
+    }
+
+    protected final void turnRight(){
+        move(x, y, (rota+1)%360);
+    }
+
+    private void move(double x, double y, double rota){
+        double lastX = this.x;
+        double lastY = this.y;
+        double lastRota = this.rota;
+        this.x = x;
+        this.y = y;
+        this.rota = rota;
         Area thisA = new Area(this.getHitBox());
         for(Obstacle o : obstacles){
-
             Area a = new Area(o.getHitBox());
             a.intersect(thisA);
             if(!a.isEmpty() && o!=this) {
                 this.x = lastX;
                 this.y = lastY;
                 this.rota = lastRota;
-                return null;
+                return;
             }
+        }
+    }
+
+    protected final double getX(){
+        return x;
+    }
+
+    protected final double getY(){
+        return y;
+    }
+
+    protected final double getRota(){
+        return rota;
+    }
+
+    protected final Obstacle shoot(){
+        long now = System.currentTimeMillis();
+        if(lastShoot+reloadTime <= now){
+            this.lastShoot = now;
+            double[] pos = PlanHelper.rotate(x, y, x+width/2., y, Math.toRadians(rota));
+            return new Bullet((int) Math.round(pos[0]), (int) Math.round(pos[1]), rota, color);
         }
         return null;
     }
 
-    public void paint(Graphics g){
+    public final void paint(Graphics g){
         if(charImg == null) {
             g.setColor(color);
             g.fillPolygon(this.getHitBox());
@@ -132,17 +172,17 @@ public class Chars implements KeyListener, Obstacle {
         }
     }
 
-    void hit(){
+    final void hit(){
         this.isDead = true;
         this.color = Color.gray;
         this.image = PlanHelper.changeColor(charImg, color);
     }
 
-    public boolean isDead(){
+    public final boolean isDead(){
         return isDead;
     }
 
-    Color getColor(){
+    final Color getColor(){
         return color;
     }
 
@@ -163,7 +203,7 @@ public class Chars implements KeyListener, Obstacle {
         if(this.input == keyEvent.getKeyCode()) input = KeyEvent.VK_UNDEFINED;
     }
 
-    public String toString(){
+    public final String toString(){
         return String.format("char%d(%s;%d;%d;%d;%d;%f)", serial, color, (int)x, (int)y, height, width, rota);
     }
 }
