@@ -132,8 +132,15 @@ public enum Map {
                 this.add(maps[i], c);
             }
             ChangeListener listener = changeEvent -> {
+                int tot = ((int) spinner.getValue() + (int) bots.getValue());
+                if(tot < 2){
+                    if(changeEvent.getSource() instanceof JSpinner){
+                        JSpinner src = (JSpinner) changeEvent.getSource();
+                        src.setValue(src.getNextValue());
+                    }
+                }
                 for(int i = 0; i < Map.values().length; i++){
-                    if(Map.values()[i].nbrPlayers() < ((int) spinner.getValue() + (int) bots.getValue())) maps[i].setEnabled(false);
+                    if(Map.values()[i].nbrPlayers() < tot) maps[i].setEnabled(false);
                     else maps[i].setEnabled(true);
                 }
             };
