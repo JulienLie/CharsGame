@@ -1,7 +1,5 @@
 package helper;
 
-import player.Chars;
-
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;

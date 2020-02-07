@@ -1,19 +1,21 @@
-package player;
+package chars;
 
 import helper.PlanHelper;
+import player.Obstacle;
+import player.PlayerChars;
 
 import java.awt.*;
 import java.awt.geom.Area;
 import java.util.List;
 
-public class Bullet implements Obstacle{
+public class Bullet implements Obstacle {
 
-    private static final int height = 2, width = 6;
+    public static final int height = 2, width = 6;
     private static final double bulletSpeed = 2;
 
     private double x, y;
-    private double rota;
-    private Color color;
+    private final double rota;
+    private final Color color;
 
     Bullet(int x, int y, double rota, Color color){
         this.x = x;

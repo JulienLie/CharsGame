@@ -1,6 +1,6 @@
 package multi;
 
-import player.Chars;
+import player.PlayerChars;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -17,7 +17,7 @@ class HostGame extends MultiGame{
 
     private final ServerSocket server;
     private boolean isRunning;
-    private Map<Socket, Chars> players;
+    private final Map<Socket, PlayerChars> players;
     private boolean haschars;
 
     HostGame() throws IOException {
@@ -81,7 +81,7 @@ class HostGame extends MultiGame{
         super.run();
     }
 
-    public void addChar(Chars c){
+    public void addChar(PlayerChars c){
         if(haschars) return;
         super.addChar(c);
         haschars = true;
@@ -106,7 +106,7 @@ class HostGame extends MultiGame{
                         int right = Integer.parseInt(split[3]);
                         int left = Integer.parseInt(split[4]);
                         int shoot = Integer.parseInt(split[5]);
-                        players.put(client, new Chars(up, down, right, left, shoot));
+                        players.put(client, new PlayerChars(up, down, right, left, shoot));
                         break;
                     case "KEYPRESSED": {
                         players.get(client).keyPressed(parseEvent(split, this));
@@ -142,6 +142,7 @@ class HostGame extends MultiGame{
         int keyCode = Integer.parseInt(split[4]);
         char keyChar = split[5].charAt(0);
         int loc = Integer.parseInt(split[5]);
+        //noinspection MagicConstant
         return new KeyEvent(c, id, when, mod, keyCode, keyChar, loc);
     }
 }

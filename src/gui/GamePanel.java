@@ -1,25 +1,26 @@
 package gui;
 
-import player.Bullet;
-import player.Chars;
+import chars.Bullet;
+import chars.Chars;
+import chars.CharsListener;
 import player.Obstacle;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class GamePanel extends JPanel {
+public class GamePanel extends JPanel implements CharsListener {
 
-    private List<Chars> chars;
-    private List<Bullet> bullets;
-    private Map map;
-    private List<Obstacle> obstacles;
+    private final List<Chars> chars;
+    private final ConcurrentLinkedQueue<Bullet> bullets;
+    private final Map map;
+    private final List<Obstacle> obstacles;
 
     GamePanel(Map map){
         this.chars = new ArrayList<>(2);
-        this.bullets = new LinkedList<>();
+        this.bullets = new ConcurrentLinkedQueue<>();
         this.map = map;
         this.obstacles = new ArrayList<>();
         this.obstacles.addAll(map.getObstacles());
@@ -38,13 +39,15 @@ public class GamePanel extends JPanel {
         }
     }
 
+    public void start(){
+        for(Chars c : chars){
+            c.start();
+        }
+    }
+
     boolean doGameUpdate(double delta){
         int nbrAlive = 0;
         for(Chars c : chars){
-            Bullet b = (Bullet) c.doAction(obstacles);
-            if(b != null){
-                bullets.add(b);
-            }
             nbrAlive += c.isDead() ? 0 : 1;
         }
 
@@ -59,14 +62,20 @@ public class GamePanel extends JPanel {
 
     public boolean addChar(Chars c){
         if(map.getSpawns().size() <= chars.size()) return false;
-        c.spawn(map.getSpawns().get(chars.size()));
+        c.spawn(map.getSpawns().get(chars.size()), obstacles);
         this.chars.add(c);
         this.obstacles.add(c);
         this.repaint();
+        c.addListener(this);
         return true;
     }
 
     public Map getMap(){
         return map;
+    }
+
+    @Override
+    public void shoot(Chars source, Bullet bullet) {
+        this.bullets.add(bullet);
     }
 }

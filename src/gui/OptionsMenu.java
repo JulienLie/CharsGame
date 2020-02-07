@@ -31,14 +31,14 @@ public class OptionsMenu extends JPanel {
         }
         try {
             load(f);
-        } catch (IOException | IllegalAccessException | ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             System.err.println("Couldn't load options file");
             e.printStackTrace();
         }
         return f;
     }
 
-    private static void load(File f) throws IOException, ClassNotFoundException, IllegalAccessException {
+    private static void load(File f) throws IOException, ClassNotFoundException {
         FileInputStream fileIn = new FileInputStream(f);
         ObjectInputStream objectIn = new ObjectInputStream(fileIn);
         for(PlayerMove pm : PlayerMove.values()){
@@ -91,7 +91,7 @@ public class OptionsMenu extends JPanel {
         }
     }
 
-    private Game parent;
+    private final Game parent;
 
     public OptionsMenu(Game parent){
         super();
@@ -141,8 +141,8 @@ public class OptionsMenu extends JPanel {
 
     private static class KeyPanel extends JPanel{
 
-        PlayerMove pm;
-        JButton[] fields;
+        final PlayerMove pm;
+        final JButton[] fields;
 
         KeyPanel(PlayerMove pm) {
             this.pm = pm;

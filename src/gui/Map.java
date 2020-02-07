@@ -1,13 +1,12 @@
 package gui;
 
-import bot.RandomBot;
+import bot.PathFindingBot;
 import bot.ShootBot;
-import player.Chars;
+import player.PlayerChars;
 import player.Obstacle;
 import player.SimpleObstacle;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -83,9 +82,9 @@ public enum Map {
     }
 
     public static class Spawn {
-        public Point pos;
-        public double dir;
-        public Color color;
+        public final Point pos;
+        public final double dir;
+        public final Color color;
 
         Spawn(int x, int y, double dir, Color color) {
             this.pos = new Point(x, y);
@@ -96,11 +95,11 @@ public enum Map {
 
     static class MapMenu extends JPanel {
 
-        JButton[] maps;
-        Game parent;
-        JSpinner spinner;
-        JButton back;
-        JSpinner bots;
+        final JButton[] maps;
+        final Game parent;
+        final JSpinner spinner;
+        final JButton back;
+        final JSpinner bots;
 
         MapMenu(Game parent){
             this.parent = parent;
@@ -163,10 +162,10 @@ public enum Map {
                     if(button.getText().equals(m.toString())){
                         parent.changeMenu(new GamePanel(m));
                         for(int i = 0; i < (int) spinner.getValue(); i++){
-                            parent.addChar(new Chars(OptionsMenu.PlayerMove.values()[i]));
+                            parent.addChar(new PlayerChars(OptionsMenu.PlayerMove.values()[i]));
                         }
                         for(int i = 0; i < (int) bots.getValue(); i++){
-                            parent.addChar(new RandomBot());
+                            parent.addChar(new PathFindingBot());
                         }
                         Thread t = new Thread(parent);
                         t.start();

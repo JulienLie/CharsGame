@@ -6,20 +6,17 @@ import java.awt.event.ActionEvent;
 
 public class Menu extends JPanel {
 
-    private JButton play;
-    private JButton multiplayer;
-    private JButton options;
-    private Game parent;
+    private final Game parent;
 
     public Menu(Game parent){
         super();
         this.parent = parent;
-        this.play = new JButton("Play");
-        this.multiplayer = new JButton("Multiplayer");
-        this.options = new JButton("Options");
-        this.play.addActionListener(this::playButton);
-        this.multiplayer.addActionListener(this::multiplayerButton);
-        this.options.addActionListener(this::optionsButton);
+        JButton play = new JButton("Play");
+        JButton multiplayer = new JButton("Multiplayer");
+        JButton options = new JButton("Options");
+        play.addActionListener(this::playButton);
+        multiplayer.addActionListener(this::multiplayerButton);
+        options.addActionListener(this::optionsButton);
         this.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -38,7 +35,7 @@ public class Menu extends JPanel {
     }
 
     private void multiplayerButton(ActionEvent event){
-
+        System.err.println("[WIP] Not yet implemented");
     }
 
     private void optionsButton(ActionEvent event){

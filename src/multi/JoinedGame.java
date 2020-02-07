@@ -1,6 +1,7 @@
 package multi;
 
-import player.Chars;
+import chars.Chars;
+import player.PlayerChars;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -23,8 +24,8 @@ class JoinedGame extends MultiGame {
         if(hasChar) return;
         try {
             PrintWriter writer = new PrintWriter(server.getOutputStream());
-            String msg = String.format("JOIN %d %d %d %d %d", c.up, c.down, c.right, c.left, c.shoot);
-            super.send(writer, msg);
+            //String msg = String.format("JOIN %d %d %d %d %d", c.up, c.down, c.right, c.left, c.shoot);
+            //super.send(writer, msg);
             writer.close();
             this.hasChar = true;
             this.addKeyListener(new KeyListener() {

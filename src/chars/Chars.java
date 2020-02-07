@@ -1,21 +1,20 @@
-package player;
+package chars;
 
 import gui.Map;
-import gui.OptionsMenu;
 import helper.PlanHelper;
 import org.jetbrains.annotations.NotNull;
+import player.Obstacle;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.geom.Area;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
-public class Chars implements KeyListener, Obstacle {
+public abstract class Chars extends Thread implements Obstacle{
 
     private static final long reloadTime = 1500;
     private static final int width = 30, height = 20;
@@ -33,89 +32,107 @@ public class Chars implements KeyListener, Obstacle {
         charImg = charImgTemp;
     }
 
-    public final int up, down, right, left, shoot;
+    public enum Action{
+        Forward,
+        Backward,
+        TurnLeft,
+        TurnRight,
+        Shoot,
+        None
+    }
+
+
     private double x,y;
     private double rota; // En degré
     private long lastShoot;
-    private int input;
     private Color color;
     private boolean isDead;
     private final int serial;
     private BufferedImage image;
     protected List<Obstacle> obstacles;
+    private List<CharsListener> listeners;
 
-    public Chars(@NotNull OptionsMenu.PlayerMove moove){
-        this(moove.up, moove.down, moove.right, moove.left, moove.shoot);
-        System.out.println("new char(" + moove.toString() + ")");
-    }
-
-    public Chars(int up, int down, int right, int left, int shoot){
-        this.up = up;
-        this.down = down;
-        this.right = right;
-        this.left = left;
-        this.shoot = shoot;
+    public Chars(){
         this.x = 0;
         this.y = 0;
         this.rota = 0;
         this.lastShoot = System.currentTimeMillis();
-        this.input = KeyEvent.VK_UNDEFINED;
         color = Color.gray;
         isDead = true;
         this.serial = ++nbr;
         if(charImg != null) image = PlanHelper.changeColor(charImg, color);
+        this.listeners = new LinkedList<>();
     }
 
-    public final void spawn(Map.Spawn spawn){
+    @Override
+    public void run() {
+        long minTime = 16;
+        while (!isDead){
+            long before = System.currentTimeMillis();
+            Action a = nextAction();
+            switch (a){
+                case Forward:
+                    forward();
+                    break;
+                case Backward:
+                    backward();
+                    break;
+                case TurnLeft:
+                    turnLeft();
+                    break;
+                case TurnRight:
+                    turnRight();
+                    break;
+                case Shoot:
+                    shoot();
+                    break;
+                case None:
+                    break;
+            }
+            long after = System.currentTimeMillis();
+            long time = after - before;
+            long wait = minTime - time;
+            if(wait > 0) {
+                try {
+                    Thread.sleep(wait);
+                } catch (InterruptedException e) {
+                    //e.printStackTrace();
+                    this.isDead = true;
+                }
+            }
+        }
+    }
+
+    @NotNull
+    protected abstract Action nextAction();
+
+    protected abstract void blocked();
+
+    public final void spawn(Map.Spawn spawn, List<Obstacle> obstacles){
         this.x = spawn.pos.x;
         this.y = spawn.pos.y;
         this.rota = spawn.dir;
         this.color = spawn.color;
         image = PlanHelper.changeColor(charImg, color);
         isDead = false;
-    }
-
-    @Override
-    public final Polygon getHitBox(){
-        return PlanHelper.rotatedRectangle(x, y, height, width, rota);
-    }
-
-    public Obstacle doAction(List<Obstacle> obstacles){
-        if(isDead) return null;
         this.obstacles = obstacles;
-        if(input == up){
-            forward();
-        }
-        else if(input == down){
-            backward();
-        }
-        else if(input == right){
-            turnRight();
-        }
-        else if(input == left){
-            turnLeft();
-        }
-        else if(input == shoot){
-            return shoot();
-        }
-        return null;
     }
 
-    protected final void forward(){
+    private void forward(){
         double rad = Math.toRadians(rota);
         move(x+Math.cos(rad), y+Math.sin(rad), rota);
     }
 
-    protected final void backward(){
+    private void backward(){
         double rad = Math.toRadians(rota);
         move(x-Math.cos(rad), y-Math.sin(rad), rota);
     }
 
-    protected final void turnLeft(){
+    private void turnLeft(){
         move(x, y, (rota-1) < 0 ? 359 : rota-1);
     }
 
-    protected final void turnRight(){
+    private void turnRight(){
         move(x, y, (rota+1)%360);
     }
 
@@ -134,16 +151,17 @@ public class Chars implements KeyListener, Obstacle {
                 this.x = lastX;
                 this.y = lastY;
                 this.rota = lastRota;
+                blocked();
                 return;
             }
         }
     }
 
-    protected final double getX(){
+    public final double getX(){
         return x;
     }
 
-    protected final double getY(){
+    public final double getY(){
         return y;
     }
 
@@ -151,17 +169,18 @@ public class Chars implements KeyListener, Obstacle {
         return rota;
     }
 
-    protected final Obstacle shoot(){
+    private void shoot(){
         long now = System.currentTimeMillis();
         if(lastShoot+reloadTime <= now){
             this.lastShoot = now;
             double[] pos = PlanHelper.rotate(x, y, x+width/2., y, Math.toRadians(rota));
-            return new Bullet((int) Math.round(pos[0]), (int) Math.round(pos[1]), rota, color);
+            Bullet b = new Bullet((int) Math.round(pos[0]), (int) Math.round(pos[1]), rota, color);
+            for(CharsListener l : listeners)
+                l.shoot(this, b);
         }
-        return null;
     }
 
-    public final void paint(Graphics g){
+    public void paint(Graphics g){
         if(charImg == null) {
             g.setColor(color);
             g.fillPolygon(this.getHitBox());
@@ -182,28 +201,21 @@ public class Chars implements KeyListener, Obstacle {
         return isDead;
     }
 
-    final Color getColor(){
+    public final Color getColor(){
         return color;
     }
 
-    @Override
-    public void keyTyped(KeyEvent keyEvent) {
+    public final void addListener(CharsListener listener){
+        listeners.add(listener);
     }
 
     @Override
-    public void keyPressed(KeyEvent keyEvent) {
-        int code = keyEvent.getKeyCode();
-        if(code == up || code == down || code == left || code == right || code == shoot) {
-            this.input = keyEvent.getKeyCode();
-        }
-    }
-
-    @Override
-    public void keyReleased(KeyEvent keyEvent) {
-        if(this.input == keyEvent.getKeyCode()) input = KeyEvent.VK_UNDEFINED;
+    public final Polygon getHitBox(){
+        return PlanHelper.rotatedRectangle(x, y, height, width, rota);
     }
 
     public final String toString(){
         return String.format("char%d(%s;%d;%d;%d;%d;%f)", serial, color, (int)x, (int)y, height, width, rota);
     }
+
 }

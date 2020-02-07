@@ -1,10 +1,11 @@
 package gui;
 
-import player.Chars;
+import chars.Chars;
+import player.PlayerChars;
 
 import javax.swing.*;
-import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.security.Key;
 import java.util.List;
 
 public class Game extends JFrame implements Runnable{
@@ -30,7 +31,8 @@ public class Game extends JFrame implements Runnable{
     public void addChar(Chars c){
         if(panel instanceof  GamePanel) {
             if (((GamePanel) panel).addChar(c)) {
-                this.addKeyListener(c);
+                if(c instanceof KeyListener)
+                    this.addKeyListener((KeyListener) c);
             }
         }
         else throw new IllegalStateException();
@@ -53,6 +55,8 @@ public class Game extends JFrame implements Runnable{
     public void run(){
         if(gameRunning) return;
         gameRunning = true;
+        if(panel instanceof GamePanel)
+            ((GamePanel) panel).start();
         gameLoop();
     }
 
@@ -124,13 +128,16 @@ public class Game extends JFrame implements Runnable{
             case 1:
             case -1:
                 for(Chars c : ((GamePanel) panel).getChars()){
-                    this.removeKeyListener(c);
+                    c.interrupt();
+                    if(c instanceof KeyListener)
+                        this.removeKeyListener((KeyListener) c);
                 }
                 this.changeMenu(new Menu(this));
                 break;
             case 2:
                 for(Chars c : ((GamePanel) panel).getChars()){
-                    this.removeKeyListener(c);
+                    if(c instanceof KeyListener)
+                        this.removeKeyListener((KeyListener) c);
                 }
                 changeMenu(new Map.MapMenu(this));
                 break;
