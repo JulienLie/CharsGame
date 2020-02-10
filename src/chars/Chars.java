@@ -2,7 +2,6 @@ package chars;
 
 import gui.Map;
 import helper.PlanHelper;
-import org.jetbrains.annotations.NotNull;
 import player.Obstacle;
 
 import javax.imageio.ImageIO;
@@ -103,7 +102,6 @@ public abstract class Chars extends Thread implements Obstacle{
         }
     }
 
-    @NotNull
     protected abstract Action nextAction();
 
     protected abstract void blocked();
@@ -165,7 +163,7 @@ public abstract class Chars extends Thread implements Obstacle{
         return y;
     }
 
-    protected final double getRota(){
+    public final double getRota(){
         return rota;
     }
 

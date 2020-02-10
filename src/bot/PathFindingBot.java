@@ -3,7 +3,6 @@ package bot;
 import chars.Bullet;
 import chars.Chars;
 import helper.PlanHelper;
-import org.jetbrains.annotations.NotNull;
 import player.Obstacle;
 
 import java.awt.*;
@@ -26,7 +25,7 @@ public class PathFindingBot extends ShootBot {
     private Chars prevClosest;
 
     @Override
-    protected  @NotNull Action nextAction() {
+    protected Action nextAction() {
         if(blocked){
             blocked = false;
             return Backward;
@@ -59,7 +58,7 @@ public class PathFindingBot extends ShootBot {
         if(canShoot(this.getX(), this.getY(), closest.getX(), closest.getY())){
             return super.nextAction();
         }
-        int recalcNbr = 5 * 60;
+        int recalcNbr = 2 * 60;
         if(path == null || nbrIter == recalcNbr || nbrIter == 0 || path.isEmpty()){
             //System.out.println("Recalc path");
             path = pathfinding(closest);
@@ -85,11 +84,13 @@ public class PathFindingBot extends ShootBot {
     @Override
     public void paint(Graphics g) {
         super.paint(g);
-        g.setColor(Color.red);
+
         if(m != null){
             for(Map.Node n : m.nodes){
+                g.setColor(Color.red);
                 g.drawRect(n.x-n.width/2, n.y-n.height/2, n.width, n.height);
                 for(Map.Node adj : n.adjacent.keySet()){
+                    g.setColor(Color.green);
                     g.drawLine(n.x, n.y, adj.x, adj.y);
                 }
             }

@@ -1,6 +1,5 @@
 package bot;
 
-import org.jetbrains.annotations.NotNull;
 import chars.Chars;
 
 import java.awt.*;
@@ -9,7 +8,6 @@ import static chars.Chars.Action.*;
 
 public class ShootBot extends BotChars {
 
-    @NotNull
     @Override
     protected Action nextAction() {
         Chars closest = getClosest();
@@ -55,22 +53,4 @@ public class ShootBot extends BotChars {
 
     @Override
     protected void blocked() {}
-
-    protected Chars getClosest(){
-        Chars closest = null;
-        double closDist = Double.MAX_VALUE;
-        for(Chars c : getChars()){
-            if(c != null && c != this){
-                Rectangle r = c.getHitBox().getBounds();
-                double x = r.x+(r.width/2.);
-                double y = r.y+(r.height/2.);
-                double dist =  Math.sqrt(Math.pow(this.getX() - x, 2) + Math.pow(this.getY() - y, 2));
-                if(dist < closDist){
-                    closDist = dist;
-                    closest = c;
-                }
-            }
-        }
-        return closest;
-    }
 }

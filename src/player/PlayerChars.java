@@ -2,7 +2,6 @@ package player;
 
 import chars.Chars;
 import gui.OptionsMenu;
-import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -14,7 +13,7 @@ public class PlayerChars extends Chars implements KeyListener {
     public final int up, down, right, left, shoot;
     private int input;
 
-    public PlayerChars(@NotNull OptionsMenu.PlayerMove moove){
+    public PlayerChars(OptionsMenu.PlayerMove moove){
         this(moove.up, moove.down, moove.right, moove.left, moove.shoot);
         System.out.println("new char(" + moove.toString() + ")");
     }
@@ -45,7 +44,6 @@ public class PlayerChars extends Chars implements KeyListener {
         if(this.input == keyEvent.getKeyCode()) input = KeyEvent.VK_UNDEFINED;
     }
 
-    @NotNull
     @Override
     public Action nextAction() {
         if(input == up){

@@ -2,6 +2,7 @@ package gui;
 
 import bot.PathFindingBot;
 import bot.ShootBot;
+import bot.neuralbot.NeuralBot;
 import player.PlayerChars;
 import player.Obstacle;
 import player.SimpleObstacle;
