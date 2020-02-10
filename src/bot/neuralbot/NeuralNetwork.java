@@ -32,10 +32,10 @@ public class NeuralNetwork implements Serializable {
             if(i == layers.length-1) layers[i] = new double[sizes[i]];
             else layers[i] = new double[sizes[i]+1];
             if(i == 0) continue;
-            weigth[i-1] = new double[sizes[i]+1][];
-            for(int j = 0; j < sizes[i]+1; j++){
-                weigth[i-1][j] = new double[sizes[i-1]+1];
-                for(int k = 0; k < sizes[i-1]+1; k++){
+            weigth[i-1] = new double[layers[i].length][];
+            for(int j = 0; j < layers[i].length; j++){
+                weigth[i-1][j] = new double[layers[i-1].length];
+                for(int k = 0; k < weigth[i-1][j].length; k++){
                     weigth[i-1][j][k] = Math.random()*2-1;
                 }
             }
@@ -58,7 +58,8 @@ public class NeuralNetwork implements Serializable {
 
         for(int i = 1; i < layers.length; i++){
             layers[i][0] = 1;
-            for(int j = 1; j < layers[i].length; j++){
+            int j = i == layers.length-1 ? 0 : 1;
+            for(; j < layers[i].length; j++){
                 double sum = 0;
                 for(int k = 0; k < layers[i-1].length; k++){
                     double l = layers[i-1][k];
@@ -69,8 +70,7 @@ public class NeuralNetwork implements Serializable {
             }
         }
 
-        double[] out = layers[layers.length-1];
-        return Arrays.copyOfRange(out, 1, out.length);
+        return Arrays.copyOf(layers[layers.length-1], layers[layers.length-1].length);
     }
 
     public double train(int maxIter, double learningRate, double accuracy, List<List<Double>> inputs, List<List<Double>> expected, BiFunction<double[], double[], Boolean> accuracyFunc) {
@@ -83,17 +83,14 @@ public class NeuralNetwork implements Serializable {
             for(int j = 0; j < inputs.size(); j++){
                 double[] rep = calculate(inputs.get(j));
                 List<Double> exp = expected.get(j);
-                for(int k = 0; k < rep.length; k++){
-                    double[] caca = new double[exp.size()];
-                    for(int l = 0; l < caca.length; l++){
-                        caca[l] = exp.get(l);
-                    }
-                    if(rep.length != caca.length) throw new IllegalArgumentException("Got expected of size " + caca.length + " but " + rep.length + " expected");
-                    if(accuracyFunc.apply(rep, caca)) acc++;
-                    backPropagation(learningRate, exp);
+                double[] caca = new double[exp.size()];
+                for(int k = 0; k < caca.length; k++){
+                    caca[k] = exp.get(k);
                 }
+                if(accuracyFunc.apply(rep, caca)) acc++;
+                backPropagation(learningRate, exp);
             }
-            acc /= inputs.size();
+            acc /= expected.size();
         }
 
         return acc;
@@ -105,26 +102,29 @@ public class NeuralNetwork implements Serializable {
             error[l] = new double[layers[l].length];
         }
 
-        for(int i = 1; i < layers[layers.length-1].length; i++){
+        for(int i = 0; i < layers[layers.length-1].length; i++){
             double y = layers[layers.length-1][i];
-            error[error.length-1][i] = y*(1-y)*(y-expected.get(i-1));
+            error[error.length-1][i] = y*(1-y)*(y-expected.get(i));
         }
 
-        for(int i = layers.length-2; i > 0; i--){ // n-1
-            for(int j = 0; j < layers[i].length; j++){ // j
+        for(int n = layers.length-1; n > 0; n--){ // n
+            for(int j = 0; j < layers[n-1].length; j++){ // j
                 double sum = 0;
-                for(int k = 0; k < error[i+1].length; k++){ // i
-                    sum += weigth[i+1][k][j]*error[i+1][k];
+                for(int i = 0; i < error[n].length; i++){ // i
+                    sum += weigth[n-1][i][j]*error[n][i];
                 }
-                double y = layers[i][j];
-                error[i][j] = y*(1-y)*sum;
+                double y = layers[n-1][j];
+                error[n-1][j] = y*(1-y)*sum;
             }
         }
 
         for(int l = 0; l < weigth.length; l++){
-            for(int i = 0; i < weigth[i].length; i++){ // i
-                for(int j = 0; j < weigth[i][j].length; j++){ // j
-                    weigth[l][i][j] = weigth[l][i][j] - learningRate * error[l][j]*layers[l][j];
+            for(int i = 0; i < weigth[l].length; i++){ // i
+                for(int j = 0; j < weigth[l][i].length; j++){ // j
+                    double precWeight = weigth[l][i][j];
+                    double err = error[l+1][i];
+                    double val = layers[l][j];
+                    weigth[l][i][j] = precWeight - learningRate * err*val;
                 }
             }
         }

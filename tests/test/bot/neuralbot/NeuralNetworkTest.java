@@ -61,7 +61,7 @@ class NeuralNetworkTest {
 
     @BeforeEach
     public void reloadNetwork(){
-        nn = new NeuralNetwork(NeuralNetwork.ActivationFunction.Sigmoid, 15, 11, 5, Chars.Action.values().length);
+        nn = new NeuralNetwork(NeuralNetwork.ActivationFunction.Sigmoid, 15, 16, 10, Chars.Action.values().length);
     }
 
     @RepeatedTest(value = 10)
@@ -80,6 +80,7 @@ class NeuralNetworkTest {
             System.out.println();
             return maxCalc == maxExpe;
         });
+        System.out.println(prec);
         assertTrue(prec >= accuracy, "" + prec);
     }
 }
